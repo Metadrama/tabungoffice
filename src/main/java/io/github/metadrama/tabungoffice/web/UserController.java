@@ -65,4 +65,12 @@ public class UserController {
 		return repository.findById(id).orElse(null);
 	}
 
-};
+	@PostMapping("/login")
+	boolean login(@RequestBody CallUser attempt) {
+		User found = repository.findByPhone(attempt.phone());
+		if (found == null) {
+			return false;
+		}
+		return found.getPassword().equals(attempt.password());
+	}
+}
