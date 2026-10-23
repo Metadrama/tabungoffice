@@ -7,6 +7,7 @@ package io.github.metadrama.tabungoffice.web;
 import java.util.List;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,22 +36,28 @@ public class UserController {
 	}
 
 	@PostMapping("/register")
-	User registerUser(@RequestBody StoreUser signup) {
+	ResponseEntity<User> registerUser(@RequestBody StoreUser signup) {
+		if (repository.existsByPhone(signup.phone())) {
+			return ResponseEntity.status(409).build();
+		}
 		User user = new User();
 		user.displayName = signup.displayName();
 		user.setEmail(signup.email());
 		user.setPhone(signup.phone());
 		user.setPassword(passwordEncoder.encode(signup.password()));
-		return repository.save(user);
+		return ResponseEntity.ok(repository.save(user));
 	}
 
 	@PutMapping("/users/{id}")
-	User updateUser(@RequestBody User changes, @PathVariable Long id) {
-		User existing = repository.findById(id).orElseThrow();
+	ResponseEntity<User> updateUser(@RequestBody User changes, @PathVariable Long id) {
+		User existing = repository.findById(id).orElse(null);
+		if (existing == null) {
+			return ResponseEntity.notFound().build();
+		}
 		existing.displayName = changes.displayName;
 		existing.setEmail(changes.getEmail());
 		existing.setPhone(changes.getPhone());
-		return repository.save(existing);
+		return ResponseEntity.ok(repository.save(existing));
 	}
 
 	@DeleteMapping("/users/{id}")
@@ -65,8 +72,10 @@ public class UserController {
 	};
 
 	@GetMapping("/users/{id}")
-	User getUser(@PathVariable Long id) {
-		return repository.findById(id).orElse(null);
+	ResponseEntity<User> getUser(@PathVariable Long id) {
+		return repository.findById(id)
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
 	@PostMapping("/login")

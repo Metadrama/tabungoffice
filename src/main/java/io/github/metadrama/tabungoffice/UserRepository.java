@@ -1,11 +1,11 @@
-//this interface is what SB will use to talk to DB unlike UserController which talks to client
-
+//this interface is what SB will use to talks to DB unlike UserController which talks to client
 package io.github.metadrama.tabungoffice;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long>{
-	
-	User findByPhone (String phone);
+public interface UserRepository extends JpaRepository<User, Long> {
 
+    User findByPhone(String phone);
+
+    boolean existsByPhone(String phone);
 }

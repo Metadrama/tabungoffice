@@ -48,14 +48,24 @@
     }
 
     function register() {
-      post('/register', {
-        displayName: document.getElementById('rName').value,
-        email: document.getElementById('rEmail').value,
-        phone: document.getElementById('rPhone').value,
-        password: document.getElementById('rPass').value
-      }).then(function (user) {
-        say('registered ' + user.displayName + ' id ' + user.id);
-        loadUsers();
+      fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName: document.getElementById('rName').value,
+          email: document.getElementById('rEmail').value,
+          phone: document.getElementById('rPhone').value,
+          password: document.getElementById('rPass').value
+        })
+      }).then(function (res) {
+        if (res.status === 409) {
+          say('that phone number is already registered');
+          return;
+        }
+        return res.json().then(function (user) {
+          say('registered ' + user.displayName + ' id ' + user.id);
+          loadUsers();
+        });
       });
     }
 
