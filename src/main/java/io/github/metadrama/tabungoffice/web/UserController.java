@@ -35,9 +35,13 @@ public class UserController {
 	}
 
 	@PostMapping("/register")
-	User registerUser(@RequestBody User registerUser) {
-
-		return repository.save(registerUser);
+	User registerUser(@RequestBody StoreUser signup) {
+		User user = new User();
+		user.displayName = signup.displayName();
+		user.setEmail(signup.email());
+		user.setPhone(signup.phone());
+		user.setPassword(passwordEncoder.encode(signup.password()));
+		return repository.save(user);
 	}
 
 	@PutMapping("/users/{id}")
@@ -71,6 +75,6 @@ public class UserController {
 		if (found == null) {
 			return false;
 		}
-		return found.getPassword().equals(attempt.password());
+		return passwordEncoder.matches(attempt.password(), found.getPassword());
 	}
 }

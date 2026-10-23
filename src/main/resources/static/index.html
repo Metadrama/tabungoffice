@@ -35,6 +35,9 @@
   </table>
 
   <script>
+    function say(t) {
+      document.getElementById('msg').textContent = t;
+    }
 
     function post(url, body) {
       return fetch(url, {
