@@ -23,7 +23,7 @@ public class Main implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		String dir = Paths.get("frontend").toAbsolutePath().toUri().toString();
-		registry.addResourceHandler("/**").addResourceLocations(dir);
+		registry.addResourceHandler("/**").addResourceLocations(dir,"classpath:/static/");
 	}
 
 	// so localhost:8080 opens the page instead of a 404

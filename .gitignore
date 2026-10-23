@@ -1,7 +1,4 @@
-#excluding eclipse ide files and generated artifacts
+# excluding generated artifacts and local IDE files
 target/
-.classpath
-.project
-.settings/
 .idea/
 data/
