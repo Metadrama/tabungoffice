@@ -1,63 +1,239 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="UTF-8">
-  <title>Tabung Office</title>
+    <meta charset="UTF-8">
+    <title>Tabung Office</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/98.css@0.1.20/dist/98.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #c0c0c0;
+        }
+
+        .window {
+            width: 560px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .authpair {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .authpair fieldset {
+            flex: 1;
+            margin: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 6px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        fieldset {
+            min-width: 0;
+        }
+
+        .formrow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .formrow > button {
+            margin-left: auto;
+        }
+
+        .formrow .field input {
+            width: 100%;
+        }
+
+        .scroll {
+            max-height: 190px;
+            overflow: auto;
+            margin-top: 6px;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        .signedIn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status-bar {
+            margin-top: 10px;
+        }
+    </style>
 </head>
+
 <body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-text">Tabung Office</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize"></button>
+                <button aria-label="Maximize"></button>
+                <button aria-label="Close"></button>
+            </div>
+        </div>
 
-<!-- shown only when not logged in -->
-<div id="authSection">
-  <h2>Register</h2>
-  <input id="rName" placeholder="name">
-  <input id="rPhone" placeholder="phone">
-  <input id="rPass" placeholder="password">
-  <input id="rPass2" placeholder="password again">
-  <button onclick="register()">register</button>
+        <div class="window-body">
 
-  <h2>Login</h2>
-  <input id="lPhone" placeholder="phone">
-  <input id="lPass" placeholder="password">
-  <button onclick="login()">login</button>
-</div>
+            <div id="authSection">
+                <div class="authpair">
+                    <fieldset>
+                        <legend>Register</legend>
+                        <label for="regName">Name</label>
+                        <input type="text" id="regName">
+                        <label for="regPhone">Phone</label>
+                        <input type="text" id="regPhone">
+                        <label for="regPass">Password</label>
+                        <input type="password" id="regPass">
+                        <label for="regPass2">Password again</label>
+                        <input type="password" id="regPass2">
+                        <div class="actions">
+                            <button onclick="register()">register</button>
+                        </div>
+                    </fieldset>
 
-<p id="msg"></p>
+                    <fieldset>
+                        <legend>Login</legend>
+                        <label for="loginPhone">Phone</label>
+                        <input type="text" id="loginPhone">
+                        <label for="loginPass">Password</label>
+                        <input type="password" id="loginPass">
+                        <div class="actions">
+                            <button onclick="login()">login</button>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
 
-<!-- shown only after login -->
-<div id="appSection" style="display:none">
+            <div id="appSection" style="display:none">
 
-  <p>logged in as <span id="whoami"></span> <button onclick="logout()">logout</button></p>
+                <div class="signedIn">
+                    <span>Signed in as <strong id="whoami"></strong></span>
+                    <button onclick="logout()">log out</button>
+                </div>
 
-  <h2>New Tabung</h2>
-  <input id="tName" placeholder="name (e.g. Farewell Aina)">
-  <input id="tPurpose" placeholder="purpose">
-  <input id="tTarget" placeholder="target amount" type="number">
-  <input id="tDate" type="date">
-  <button onclick="createTabung()">create</button>
+                <fieldset>
+                    <legend>Office Tabungs</legend>
+                    <button onclick="loadTabungs()">refresh</button>
+                    <div class="scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>tabung id</th>
+                                    <th>name</th>
+                                    <th>target</th>
+                                    <th>collected</th>
+                                    <th>members</th>
+                                    <th>event</th>
+                                    <th>started by</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabungRows"></tbody>
+                        </table>
+                    </div>
+                </fieldset>
 
-  <h2>Office Tabungs</h2>
-  <button onclick="loadTabungs()">refresh</button>
-  <table border="1" cellpadding="4">
-    <tr><th>id</th><th>name</th><th>purpose</th><th>target</th><th>collected</th><th>members</th><th>event</th><th>started by</th></tr>
-    <tbody id="tabungRows"></tbody>
-  </table>
+                <fieldset>
+                    <legend>New Tabung</legend>
+                    <div class="formrow">
+                        <div class="field">
+                            <label for="tName">Name</label>
+                            <input type="text" id="tName">
+                        </div>
+                        <div class="field">
+                            <label for="tTarget">Target</label>
+                            <input type="number" id="tTarget">
+                        </div>
+                        <div class="field">
+                            <label for="tDate">Event date</label>
+                            <input type="date" id="tDate">
+                        </div>
+                        <button onclick="createTabung()">create</button>
+                    </div>
+                </fieldset>
 
-  <h2>Add Contribution</h2>
-  <input id="cTabungId" placeholder="tabung id" type="number">
-  <input id="cName" placeholder="member name">
-  <input id="cAmount" placeholder="amount" type="number">
-  <input id="cNote" placeholder="note">
-  <button onclick="addContribution()">add</button>
+                <fieldset>
+                    <legend>Contributions</legend>
+                    <div class="formrow">
+                        <div class="field">
+                            <label for="cListId">Tabung id</label>
+                            <input type="number" id="cListId">
+                        </div>
+                        <button onclick="loadContributions()">load</button>
+                    </div>
+                    <div class="scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>contribution id</th>
+                                    <th>member</th>
+                                    <th>amount</th>
+                                    <th>note</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contribRows"></tbody>
+                        </table>
+                    </div>
+                </fieldset>
 
-  <h2>Contributions</h2>
-  <input id="cListId" placeholder="tabung id" type="number">
-  <button onclick="loadContributions()">load</button>
-  <table border="1" cellpadding="4">
-    <tr><th>id</th><th>member</th><th>amount</th><th>note</th></tr>
-    <tbody id="contribRows"></tbody>
-  </table>
+                <fieldset>
+                    <legend>Add Contribution</legend>
+                    <div class="formrow">
+                        <div class="field">
+                            <label for="cTabungId">Tabung id</label>
+                            <input type="number" id="cTabungId">
+                        </div>
+                        <div class="field">
+                            <label for="cName">Member name</label>
+                            <input type="text" id="cName">
+                        </div>
+                        <div class="field">
+                            <label for="cAmount">Amount</label>
+                            <input type="number" id="cAmount">
+                        </div>
+                        <div class="field">
+                            <label for="cNote">Note</label>
+                            <input type="text" id="cNote">
+                        </div>
+                        <button onclick="addContribution()">add</button>
+                    </div>
+                </fieldset>
 
-</div>
+            </div>
+
+        </div>
+
+        <div class="status-bar">
+            <p class="status-bar-field" id="msg"></p>
+        </div>
+    </div>
 
 <script>
 var API = 'http://localhost:8080';
@@ -76,8 +252,8 @@ function post(url, body) {
 }
 
 function register() {
-  var pass = document.getElementById('rPass').value;
-  var pass2 = document.getElementById('rPass2').value;
+  var pass = document.getElementById('regPass').value;
+  var pass2 = document.getElementById('regPass2').value;
   if (pass !== pass2) {
     say('the two passwords do not match');
     return;
@@ -87,8 +263,8 @@ function register() {
     return;
   }
   post('/register', {
-    displayName: document.getElementById('rName').value,
-    phone: document.getElementById('rPhone').value,
+    displayName: document.getElementById('regName').value,
+    phone: document.getElementById('regPhone').value,
     password: pass
   }).then(function (res) {
     if (res.status === 409) {
@@ -102,10 +278,10 @@ function register() {
 }
 
 function login() {
-  var phone = document.getElementById('lPhone').value;
+  var phone = document.getElementById('loginPhone').value;
   post('/login', {
     phone: phone,
-    password: document.getElementById('lPass').value
+    password: document.getElementById('loginPass').value
   }).then(function (res) { return res.json(); })
     .then(function (ok) {
       if (!ok) {
@@ -137,7 +313,6 @@ function logout() {
 function createTabung() {
   post('/tabungs?ownerPhone=' + encodeURIComponent(myPhone), {
     name: document.getElementById('tName').value,
-    purpose: document.getElementById('tPurpose').value,
     targetAmount: Number(document.getElementById('tTarget').value),
     eventDate: document.getElementById('tDate').value
   }).then(function (res) {
@@ -163,7 +338,7 @@ function loadTabungs() {
       }
       list.forEach(function (t) {
         var tr = document.createElement('tr');
-        [t.id, t.name, t.purpose, t.targetAmount, '', '', t.eventDate, t.ownerPhone].forEach(function (v) {
+        [t.id, t.name, t.targetAmount, '', '', t.eventDate, t.ownerPhone].forEach(function (v) {
           var td = document.createElement('td');
           td.textContent = v === null ? '' : v;
           tr.appendChild(td);
@@ -182,8 +357,8 @@ function fillProgress(id) {
       for (var i = 0; i < rows.children.length; i++) {
         var cells = rows.children[i].children;
         if (String(cells[0].textContent) === String(id)) {
-          cells[4].textContent = s.collected;
-          cells[5].textContent = s.memberCount;
+          cells[3].textContent = s.collected;
+          cells[4].textContent = s.memberCount;
         }
       }
     });
@@ -238,4 +413,5 @@ function loadContributions() {
 </script>
 
 </body>
+
 </html>
