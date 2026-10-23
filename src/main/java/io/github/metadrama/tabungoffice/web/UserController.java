@@ -24,7 +24,7 @@ public class UserController {
 	private final UserRepository repository;
 	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-	record StoreUser(String displayName, String email, String phone, String password) {
+	record StoreUser(String displayName, String phone, String password) {
 	};
 
 	record CallUser(String phone, String password) {
@@ -42,7 +42,6 @@ public class UserController {
 		}
 		User user = new User();
 		user.displayName = signup.displayName();
-		user.setEmail(signup.email());
 		user.setPhone(signup.phone());
 		user.setPassword(passwordEncoder.encode(signup.password()));
 		return ResponseEntity.ok(repository.save(user));
@@ -55,7 +54,6 @@ public class UserController {
 			return ResponseEntity.notFound().build();
 		}
 		existing.displayName = changes.displayName;
-		existing.setEmail(changes.getEmail());
 		existing.setPhone(changes.getPhone());
 		return ResponseEntity.ok(repository.save(existing));
 	}

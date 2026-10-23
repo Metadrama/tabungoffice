@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tabung Office</title>
+</head>
+<body>
+
+<!-- shown only when not logged in -->
+<div id="authSection">
+  <h2>Register</h2>
+  <input id="rName" placeholder="name">
+  <input id="rPhone" placeholder="phone">
+  <input id="rPass" placeholder="password">
+  <input id="rPass2" placeholder="password again">
+  <button onclick="register()">register</button>
+
+  <h2>Login</h2>
+  <input id="lPhone" placeholder="phone">
+  <input id="lPass" placeholder="password">
+  <button onclick="login()">login</button>
+</div>
+
+<p id="msg"></p>
+
+<!-- shown only after login -->
+<div id="appSection" style="display:none">
+
+  <p>logged in as <span id="whoami"></span> <button onclick="logout()">logout</button></p>
+
+  <h2>New Tabung</h2>
+  <input id="tName" placeholder="name (e.g. Farewell Aina)">
+  <input id="tPurpose" placeholder="purpose">
+  <input id="tTarget" placeholder="target amount" type="number">
+  <input id="tDate" type="date">
+  <button onclick="createTabung()">create</button>
+
+  <h2>Office Tabungs</h2>
+  <button onclick="loadTabungs()">refresh</button>
+  <table border="1" cellpadding="4">
+    <tr><th>id</th><th>name</th><th>purpose</th><th>target</th><th>collected</th><th>members</th><th>event</th><th>started by</th></tr>
+    <tbody id="tabungRows"></tbody>
+  </table>
+
+  <h2>Add Contribution</h2>
+  <input id="cTabungId" placeholder="tabung id" type="number">
+  <input id="cName" placeholder="member name">
+  <input id="cAmount" placeholder="amount" type="number">
+  <input id="cNote" placeholder="note">
+  <button onclick="addContribution()">add</button>
+
+  <h2>Contributions</h2>
+  <input id="cListId" placeholder="tabung id" type="number">
+  <button onclick="loadContributions()">load</button>
+  <table border="1" cellpadding="4">
+    <tr><th>id</th><th>member</th><th>amount</th><th>note</th></tr>
+    <tbody id="contribRows"></tbody>
+  </table>
+
+</div>
+
+<script>
+var API = 'http://localhost:8080';
+var myPhone = '';
+
+function say(t) {
+  document.getElementById('msg').textContent = t;
+}
+
+function post(url, body) {
+  return fetch(API + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+function register() {
+  var pass = document.getElementById('rPass').value;
+  var pass2 = document.getElementById('rPass2').value;
+  if (pass !== pass2) {
+    say('the two passwords do not match');
+    return;
+  }
+  if (pass.length < 6) {
+    say('password needs at least 6 characters');
+    return;
+  }
+  post('/register', {
+    displayName: document.getElementById('rName').value,
+    phone: document.getElementById('rPhone').value,
+    password: pass
+  }).then(function (res) {
+    if (res.status === 409) {
+      say('that phone number is already registered');
+      return;
+    }
+    return res.json().then(function (user) {
+      say('registered ' + user.displayName + '. now log in with your phone.');
+    });
+  });
+}
+
+function login() {
+  var phone = document.getElementById('lPhone').value;
+  post('/login', {
+    phone: phone,
+    password: document.getElementById('lPass').value
+  }).then(function (res) { return res.json(); })
+    .then(function (ok) {
+      if (!ok) {
+        say('wrong phone or password');
+        return;
+      }
+      myPhone = phone;
+      showApp();
+      say('');
+      loadTabungs();
+    });
+}
+
+function showApp() {
+  document.getElementById('authSection').style.display = 'none';
+  document.getElementById('appSection').style.display = 'block';
+  document.getElementById('whoami').textContent = myPhone;
+}
+
+function logout() {
+  myPhone = '';
+  document.getElementById('appSection').style.display = 'none';
+  document.getElementById('authSection').style.display = 'block';
+  document.getElementById('tabungRows').innerHTML = '';
+  document.getElementById('contribRows').innerHTML = '';
+  say('logged out');
+}
+
+function createTabung() {
+  post('/tabungs?ownerPhone=' + encodeURIComponent(myPhone), {
+    name: document.getElementById('tName').value,
+    purpose: document.getElementById('tPurpose').value,
+    targetAmount: Number(document.getElementById('tTarget').value),
+    eventDate: document.getElementById('tDate').value
+  }).then(function (res) {
+    if (!res.ok) {
+      say('could not create tabung, check the fields');
+      return;
+    }
+    say('tabung created');
+    loadTabungs();
+  });
+}
+
+function loadTabungs() {
+  // no ownerPhone filter: a tabung is an office collection, everyone sees all of them
+  fetch(API + '/tabungs')
+    .then(function (res) { return res.json(); })
+    .then(function (list) {
+      var rows = document.getElementById('tabungRows');
+      rows.innerHTML = '';
+      if (list.length === 0) {
+        say('no tabungs yet, create one above');
+        return;
+      }
+      list.forEach(function (t) {
+        var tr = document.createElement('tr');
+        [t.id, t.name, t.purpose, t.targetAmount, '', '', t.eventDate, t.ownerPhone].forEach(function (v) {
+          var td = document.createElement('td');
+          td.textContent = v === null ? '' : v;
+          tr.appendChild(td);
+        });
+        rows.appendChild(tr);
+        fillProgress(t.id);
+      });
+    });
+}
+
+function fillProgress(id) {
+  fetch(API + '/tabungs/' + id)
+    .then(function (res) { return res.json(); })
+    .then(function (s) {
+      var rows = document.getElementById('tabungRows');
+      for (var i = 0; i < rows.children.length; i++) {
+        var cells = rows.children[i].children;
+        if (String(cells[0].textContent) === String(id)) {
+          cells[4].textContent = s.collected;
+          cells[5].textContent = s.memberCount;
+        }
+      }
+    });
+}
+
+function addContribution() {
+  var id = document.getElementById('cTabungId').value;
+  if (!id) {
+    say('type the tabung id first');
+    return;
+  }
+  post('/tabungs/' + id + '/contributions', {
+    memberName: document.getElementById('cName').value,
+    amount: Number(document.getElementById('cAmount').value),
+    note: document.getElementById('cNote').value
+  }).then(function (res) {
+    if (res.status === 404) {
+      say('no tabung with that id');
+      return;
+    }
+    say('contribution added');
+    loadTabungs();
+  });
+}
+
+function loadContributions() {
+  var id = document.getElementById('cListId').value;
+  if (!id) {
+    say('type the tabung id first');
+    return;
+  }
+  fetch(API + '/tabungs/' + id + '/contributions')
+    .then(function (res) { return res.json(); })
+    .then(function (list) {
+      var rows = document.getElementById('contribRows');
+      rows.innerHTML = '';
+      if (list.length === 0) {
+        say('nobody has contributed to that tabung yet');
+        return;
+      }
+      list.forEach(function (c) {
+        var tr = document.createElement('tr');
+        [c.id, c.memberName, c.amount, c.note].forEach(function (v) {
+          var td = document.createElement('td');
+          td.textContent = v === null ? '' : v;
+          tr.appendChild(td);
+        });
+        rows.appendChild(tr);
+      });
+    });
+}
+</script>
+
+</body>
+</html>
